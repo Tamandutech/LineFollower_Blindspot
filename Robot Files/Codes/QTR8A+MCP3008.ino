@@ -1,25 +1,11 @@
-/***************************************************
-Simple example of reading the MCP3008 analog input channels and printing
-them all out.
-
-Author: Carter Nelson
-License: Public Domain
-****************************************************/
-
 #include <Adafruit_MCP3008.h>
 
 Adafruit_MCP3008 adc;
-int inverseColor = 1023;
-int count = 0;
-float ValorSensor0;
-float ValorSensor1;
-float ValorSensor2;
-float ValorSensor3;
-float ValorSensor4;
-float ValorSensor5;
-float ValorSensor6;
-float ValorSensor7;
-float Posicao = 0;
+
+int numSensors = 8;//Numero de sesnores sendo utilizados
+float valorSensor[8];//array de valores do sensor
+float posit = 0; //posição do robô em relação a linha
+bool whiteLine = true;
 
 void setup() {
 Serial.begin(9600);
@@ -38,17 +24,32 @@ Serial.println("MCP3008 simple test.");
 adc.begin(10, 12, 11, 2);
 }
 
-void loop() {
- ValorSensor0 = adc.readADC(7);
- ValorSensor1 = adc.readADC(6);
- ValorSensor2 = adc.readADC(5);
- ValorSensor3 = adc.readADC(4);
- ValorSensor4 = adc.readADC(3);
- ValorSensor5 = adc.readADC(2);
- ValorSensor6 = adc.readADC(1);
- ValorSensor7 = adc.readADC(0);
-//Serial.println ();
- Posicao = (0*(inverseColor-ValorSensor0) + 1000*(inverseColor-ValorSensor1) + 2000*(inverseColor-ValorSensor2) + 3000*(inverseColor-ValorSensor3) + 4000*(inverseColor-ValorSensor4) + 5000*(inverseColor-ValorSensor5) + 6000*(inverseColor-ValorSensor6) + 7000*(inverseColor-ValorSensor7))/((inverseColor-ValorSensor0) + (inverseColor-ValorSensor1) + (inverseColor-ValorSensor2) + (inverseColor-ValorSensor3) + (inverseColor-ValorSensor4) + (inverseColor-ValorSensor5) + (inverseColor-ValorSensor6) + (inverseColor-ValorSensor7));
- Serial.println (Posicao);
 
+
+void loop() {
+ 
+for(int i=0; i<numSensors; i++){
+    valorSensor[i] = adc.readADC(i);
+    if(whiteLine){
+      valorSensor[i] = 1023-valorSensor[i]; //se a linha for branca no fundo preto
+    }    
+  }  
+  posit = GetPosition(valorSensor);
+ Serial.println (posit);
 }
+
+float GetPosition(float sensorsValues[]){//recebe o array de valores lidos
+  float pos=0;
+  float denom=0, numer =0;
+  int num = sizeof(sensorsValues);
+
+  for(int i=0; i<numS;i++){
+    numer= i*sensorsValues[i] + numer;
+    denom= sensorsValues[i] + denom;
+  }
+  pos = numer/denom;
+
+  return pos; //retorna a posição em relação a linha
+}
+
+
