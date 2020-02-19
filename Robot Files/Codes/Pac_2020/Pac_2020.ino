@@ -81,7 +81,7 @@ while (!Serial);
 adc.begin(10, 12, 11, 2);
 //------------------------------------------------------INICIO CALIBRAÇÃO----------------------------------
 BlinkLed(3, 500); // Pisca o Led para mostrar que a calibração começou
-CalibrateSensors(); // inicia rotina de calibração dos sensores
+CalibrateArraySensors(); // inicia rotina de calibração dos sensores
 BlinkLed(5, 100); //Pisca o Led para mostrar que a calibração terminou e deve-se colocar o robô na posição
 delay(000); //aguarda 2 segundos para colocar o robô.
 }
@@ -105,10 +105,10 @@ if(currentMillis >= stopTime){
  Serial.println (posit);
 }
 
-void CalibrateSensors() {
-//PseudoCode
+//calibrate o array de sensores pegando os valores máximo e mínimo que cada um esta lendo
+void CalibrateArraySensors() {
 for(int i=0; i<200; i++){
-  for(int j=0; j<8; j++){ 
+  for(int j=0; j<numSensors; j++){ 
     float read = adc.readADC(i);
 
     if(read < MinQTRValues[i])   MinQTRValues[i]= read;
@@ -118,24 +118,23 @@ for(int i=0; i<200; i++){
 }
 //------- MIN VALUES -----------------
 Serial.print(" Min Values: ");
-for(int k=0; k<8; k++){
-  Serial.print(" ");
-  Serial.print(MinQTRValues[k]);
-}
+  for(int k=0; k<numSensors; k++){
+    Serial.print(" ");
+    Serial.print(MinQTRValues[k]);
+  }
 //------MAX VALUES ------------------
 Serial.println(" ");
 Serial.print("Max Values: ");
-for(int l=0; l<8; l++){
-  Serial.print(" ");
-  Serial.print(MaxQTRValues[l]);
-}
+  for(int l=0; l<numSensors; l++){
+    Serial.print(" ");
+    Serial.print(MaxQTRValues[l]);
+  }
 }
 
 void ReadArraySensor (){
 
-
   for(int i=0; i<numSensors; i++){
-    int aux;
+    float aux;
     aux = adc.readADC(i);
     if(aux>MaxQTRValues[i]) aux = MaxQTRValues[i];
     if(aux<MinQTRValues[i]) aux = MinQTRValues[i];
@@ -144,8 +143,11 @@ void ReadArraySensor (){
 
     if(whiteLine){
        valorSensor[i] = 1000-valorSensor[i]; //se a linha for branca no fundo preto
-    }    
+    }
+    //Serial.print(valorSensor[i]);
+    //Serial.print("    ");     
   }
+  //Serial.println(" ");
 }
 
 //calcula a posição do robô em relação a linha
