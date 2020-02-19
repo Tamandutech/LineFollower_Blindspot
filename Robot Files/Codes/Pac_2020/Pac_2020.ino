@@ -101,6 +101,7 @@ if((currentMillis - previousMillis) >= interval){
 if(currentMillis >= stopTime){
   StopRobot();
 }*/
+ ReadArraySensor();
  posit = GetPosition(valorSensor);
  Serial.println (posit);
 }
