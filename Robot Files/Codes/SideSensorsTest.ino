@@ -1,7 +1,7 @@
 
 
-const int SensorAnalog1 = A7;  // Analog input pin sensor de linha 1A
-const int SensorAnalog2 = A6; // Analog input pin sensor de linha 2A
+const int SensorAnalog1 = A6;  // Analog input pin sensor de linha 1A
+const int SensorAnalog2 = A7; // Analog input pin sensor de linha 2A
 
 int sensor1Value = 0;        // valor inicial do sensor
 int sensor2Value = 0;        // valor inicial do sensor

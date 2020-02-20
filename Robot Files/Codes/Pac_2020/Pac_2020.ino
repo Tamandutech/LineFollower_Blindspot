@@ -4,16 +4,16 @@ Adafruit_MCP3008 adc;
 #define Led              13
 
 //Setup dos sensores parada
-#define stopSensor1 A4
-#define stopSensor2 A5
+#define stopSensor1 A6
+#define stopSensor2 A7
 int stopCount =0;
 int stopSensorValue1 = 0, stopSensorValue2 = 0;        // valores iniciais dos sensores 1 e 2
 int stopTrigger1 =0, stopTrigger2= 0;                        //valor que ativa a contagem dos sensores 1 e 2
-int instersecs=0;                                      //valor de instersecções na pista
+int instersecs=50;                                      //valor de instersecções na pista
 
 //setup dos sensores curva
-#define curveSensor1 A6
-#define curveSensor2 A7
+#define curveSensor1 A5
+#define curveSensor2 A4
 int curvesCount =0;
 int curveSensorValue1 = 0, curveSensorValue2 = 0;;        // valor inicial dos sensores esquerdos 1 e 2
 int curveTrigger1 =0, curveTrigger2= 0;
@@ -42,10 +42,10 @@ const uint8_t rightReverse = 8; // IN4 - Reverse Drive
 //Speed configs
 int rightMaxSpeed =255;; // velocidade máxima da roda direita
 int leftMaxSpeed =255;// velocidade máxima da roda esquerda
-int rightBaseSpeed= 150; // velocidade base da roda direita
-int leftBaseSpeed =150; // velocidade base da roda esquerda
-int rightMinSpeed =2; // velocidade min da roda direita
-int leftMinSpeed =2;
+int rightBaseSpeed= 190; // velocidade base da roda direita
+int leftBaseSpeed =190; // velocidade base da roda esquerda
+int rightMinSpeed =10; // velocidade min da roda direita
+int leftMinSpeed =10;
 
 //Temporizadores
 unsigned long previousMillis = 0;  
@@ -83,7 +83,7 @@ adc.begin(10, 12, 11, 2);
 BlinkLed(3, 500); // Pisca o Led para mostrar que a calibração começou
 CalibrateArraySensors(); // inicia rotina de calibração dos sensores
 BlinkLed(5, 100); //Pisca o Led para mostrar que a calibração terminou e deve-se colocar o robô na posição
-delay(000); //aguarda 2 segundos para colocar o robô.
+delay(2000); //aguarda 2 segundos para colocar o robô.
 }
 
 //---------------------------------------------------- LOOPING CODE -------------------------------------------------------------------
@@ -92,8 +92,8 @@ void loop() {
 currentMillis = millis();//iguala o valor de current ao valor real de milis
 
 if((currentMillis - previousMillis) >= interval){
-  CountStops();
-  CountCurves();
+  //CountStops();
+  //CountCurves();
   previousMillis = currentMillis;
 }
 
@@ -103,19 +103,21 @@ if(currentMillis >= stopTime){
 }*/
  ReadArraySensor();
  posit = GetPosition(valorSensor);
- Serial.println (posit);
+ PIDFollow(posit);
+ //Serial.println (posit);
 }
 
 //calibrate o array de sensores pegando os valores máximo e mínimo que cada um esta lendo
 void CalibrateArraySensors() {
 for(int i=0; i<200; i++){
   for(int j=0; j<numSensors; j++){ 
-    float read = adc.readADC(i);
+    float read = adc.readADC(j);
 
-    if(read < MinQTRValues[i])   MinQTRValues[i]= read;
+    if(read < MinQTRValues[j])   MinQTRValues[j]= read;
 
-    if(read > MaxQTRValues[i])   MaxQTRValues[i] = read;
+    if(read > MaxQTRValues[j])   MaxQTRValues[j] = read;
   }
+  delay(25);
 }
 //------- MIN VALUES -----------------
 Serial.print(" Min Values: ");
@@ -140,7 +142,7 @@ void ReadArraySensor (){
     if(aux>MaxQTRValues[i]) aux = MaxQTRValues[i];
     if(aux<MinQTRValues[i]) aux = MinQTRValues[i];
 
-    valorSensor[i] = 1000 * (aux / (MaxQTRValues[i]-MinQTRValues[i]));
+    valorSensor[i] = 1000 * ((aux-MinQTRValues[i]) /(MaxQTRValues[i]-MinQTRValues[i]));
 
     if(whiteLine){
        valorSensor[i] = 1000-valorSensor[i]; //se a linha for branca no fundo preto
@@ -155,13 +157,16 @@ void ReadArraySensor (){
 float GetPosition(float sensorsValues[]){
   float pos=0;
   float denom=0, numer =0;
-  int num = sizeof(sensorsValues);
+  //int num = sizeof(sensorsValues);
 
-  for(int i=0; i<num;i++){
-    numer= i*sensorsValues[i] + numer;
+  for(int i=0; i<numSensors;i++){
+    numer= (i*1000 * sensorsValues[i]) + numer;
     denom= sensorsValues[i] + denom;
   }
   pos = numer/denom;
+
+  if(pos<0) pos=0;
+  if(pos>(numSensors-1)*1000) pos = (numSensors-1)*1000;
 
   return pos; //retorna a posição em relação a linha
 }
@@ -189,16 +194,16 @@ void CountCurves(){ //conta os marcadores de curva
   
 }
 
-int PIDFollow(int linhaposition) {
+int PIDFollow(float linhaposition) {
 
   float P=0, I=0, D=0;
-  float Kp=0.7;//0.02  0.0385
-  float Ki=0;
-  float Kd=0.0;//0.1
+  float Kp=0.07;//0.02  0.0385
+  float Ki=0.0;
+  float Kd=0.7;//0.1
 
   //CALCULO DE VALOR LIDO
   last_proportional;
-  proportional = 3500-linhaposition;
+  proportional = linhaposition-3500;
   derivative=proportional-last_proportional;
   integral = integral+proportional;
   last_proportional=proportional;
@@ -241,10 +246,10 @@ void set_motors(int l, int r)
   analogWrite(pwmLeft,l);
   analogWrite(pwmRight, r);
 
-  digitalWrite(leftForward, LOW);
-  digitalWrite(rightForward, LOW);
-  digitalWrite(leftReverse, HIGH);
-  digitalWrite(rightReverse, HIGH);
+  digitalWrite(leftForward, HIGH);
+  digitalWrite(rightForward, HIGH);
+  digitalWrite(leftReverse, LOW);
+  digitalWrite(rightReverse, LOW);
 }
 
 void StopRobot(){ //para o robô 
