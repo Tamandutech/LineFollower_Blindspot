@@ -8,7 +8,7 @@ int numSensors = 8;//Numero de sesnores sendo utilizados
 float valorSensor[8];//array de valores do sensor
 float posit = 0; //posição do robô em relação a linha
 float MaxQTRValues[8]=  {0, 0, 0, 0, 0, 0, 0, 0};
-float MinQTRValues[8]=  {1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023};; //armazenar valores máximos e mínimo para a calibração.
+float MinQTRValues[8]=  {1023, 1023, 1023, 1023, 1023, 1023, 1023, 1023}; //armazenar valores máximos e mínimo para a calibração.
 bool whiteLine = true;
 float idealPosition = ((numSensors-1)*1000)/2;
 
